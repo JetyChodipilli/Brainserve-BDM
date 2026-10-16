@@ -1,0 +1,61 @@
+name: CI/CD Pipeline - EduDeal Enterprise
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-and-test:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: bdm_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
+        run: node scripts/migrate.js
+
+      - name: Seed Database
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
+        run: node scripts/seed.js
+
+      - name: Run Automated Test Suite (Unit & Integration)
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
+        run: npm test
+
+      - name: Build Next.js Production Artifact
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
+          SESSION_SECRET: test-session-secret-for-ci-build-32chars
+        run: npm run build
