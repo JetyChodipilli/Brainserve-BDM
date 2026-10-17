@@ -72,6 +72,13 @@ export async function PUT(
       ratio_terms_description: body.ratio_terms_description !== undefined ? body.ratio_terms_description : currentDeal.ratio_terms_description,
     });
 
+    if (!ratioResult.isValid) {
+      return NextResponse.json(
+        { error: `Invalid commercial terms: ${ratioResult.errors.join(' ')}` },
+        { status: 400 }
+      );
+    }
+
     const updateRes = await query(
       `UPDATE deals 
        SET title = COALESCE($2, title),

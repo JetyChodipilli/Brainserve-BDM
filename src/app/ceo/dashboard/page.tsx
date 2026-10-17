@@ -17,6 +17,8 @@ import {
   PieChart,
   Users,
   DollarSign,
+  Activity,
+  Sparkles,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { MetricCard } from '@/components/MetricCard';
@@ -35,7 +37,7 @@ export default function CeoDashboardPage() {
       try {
         const [kpiRes, dealsRes] = await Promise.all([
           fetch('/api/dashboard/kpis'),
-          fetch('/api/deals?limit=5'),
+          fetch('/api/deals?limit=6'),
         ]);
 
         if (kpiRes.ok) {
@@ -62,9 +64,14 @@ export default function CeoDashboardPage() {
       {/* Top Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Executive CEO Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Executive CEO Dashboard</h1>
+            <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200">
+              Live Governance
+            </span>
+          </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time higher education institutional intelligence, BDM productivity, and commercial governance.
+            Real-time higher education institutional intelligence, commercial governance, and operational execution.
           </p>
         </div>
 
@@ -84,7 +91,7 @@ export default function CeoDashboardPage() {
         <div className="py-16 text-center text-slate-500">Calculating executive KPIs...</div>
       ) : kpis ? (
         <>
-          {/* Executive KPI Metrics */}
+          {/* Executive KPI Metrics Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <MetricCard
               title="Registered Colleges"
@@ -108,8 +115,8 @@ export default function CeoDashboardPage() {
               icon={TrendingUp}
               iconColor="text-emerald-600"
               bgColor="bg-emerald-50"
-              subtitle="Approved / Reviewed Decided Deals"
-              trendText="Verified"
+              subtitle="Approved / Decided Deals"
+              trendText="Audit-Verified"
               trendType="positive"
             />
             <MetricCard
@@ -122,35 +129,98 @@ export default function CeoDashboardPage() {
             />
           </div>
 
-          {/* Deal Pipeline Status Distribution */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-              Organization-wide Deal Pipeline Breakdown
-            </h3>
+          {/* Deal Pipeline Visual Flow Card */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Institutional Deal Lifecycle Pipeline
+                </h3>
+              </div>
+              <span className="text-xs font-semibold text-slate-500">
+                {kpis.totalDeals} Total Deals Tracked
+              </span>
+            </div>
+
+            {/* Visual Pipeline Funnel */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                <span className="text-xl font-bold text-blue-900">{kpis.submittedDeals}</span>
-                <span className="block text-xs font-semibold text-blue-700 mt-1">Submitted</span>
+              <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200">
+                <span className="text-2xl font-black text-blue-900">{kpis.submittedDeals}</span>
+                <span className="block text-xs font-bold text-blue-700 mt-1">Submitted</span>
+                <div className="w-full bg-blue-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-full rounded-full"
+                    style={{
+                      width: `${kpis.totalDeals > 0 ? (kpis.submittedDeals / kpis.totalDeals) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
-                <span className="text-xl font-bold text-amber-900">{kpis.underReviewDeals}</span>
-                <span className="block text-xs font-semibold text-amber-700 mt-1">In Review</span>
+
+              <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200">
+                <span className="text-2xl font-black text-amber-900">{kpis.underReviewDeals}</span>
+                <span className="block text-xs font-bold text-amber-700 mt-1">In Review</span>
+                <div className="w-full bg-amber-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-amber-600 h-full rounded-full"
+                    style={{
+                      width: `${kpis.totalDeals > 0 ? (kpis.underReviewDeals / kpis.totalDeals) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                <span className="text-xl font-bold text-emerald-900">{kpis.approvedDeals}</span>
-                <span className="block text-xs font-semibold text-emerald-700 mt-1">Approved</span>
+
+              <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                <span className="text-2xl font-black text-emerald-900">{kpis.approvedDeals}</span>
+                <span className="block text-xs font-bold text-emerald-700 mt-1">Approved</span>
+                <div className="w-full bg-emerald-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-emerald-600 h-full rounded-full"
+                    style={{
+                      width: `${kpis.totalDeals > 0 ? (kpis.approvedDeals / kpis.totalDeals) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-teal-50 border border-teal-200">
-                <span className="text-xl font-bold text-teal-900">{kpis.activeDeals}</span>
-                <span className="block text-xs font-semibold text-teal-700 mt-1">Active</span>
+
+              <div className="p-3.5 rounded-xl bg-teal-50/70 border border-teal-200">
+                <span className="text-2xl font-black text-teal-900">{kpis.activeDeals}</span>
+                <span className="block text-xs font-bold text-teal-700 mt-1">Active</span>
+                <div className="w-full bg-teal-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-teal-600 h-full rounded-full"
+                    style={{
+                      width: `${kpis.totalDeals > 0 ? (kpis.activeDeals / kpis.totalDeals) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
-                <span className="text-xl font-bold text-orange-900">{kpis.needsCorrectionDeals}</span>
-                <span className="block text-xs font-semibold text-orange-700 mt-1">Correction Req.</span>
+
+              <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200">
+                <span className="text-2xl font-black text-orange-900">{kpis.needsCorrectionDeals}</span>
+                <span className="block text-xs font-bold text-orange-700 mt-1">Correction Req.</span>
+                <div className="w-full bg-orange-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-orange-600 h-full rounded-full"
+                    style={{
+                      width: `${kpis.totalDeals > 0 ? (kpis.needsCorrectionDeals / kpis.totalDeals) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200">
-                <span className="text-xl font-bold text-rose-900">{kpis.rejectedDeals}</span>
-                <span className="block text-xs font-semibold text-rose-700 mt-1">Rejected</span>
+
+              <div className="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200">
+                <span className="text-2xl font-black text-rose-900">{kpis.rejectedDeals}</span>
+                <span className="block text-xs font-bold text-rose-700 mt-1">Rejected</span>
+                <div className="w-full bg-rose-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-rose-600 h-full rounded-full"
+                    style={{
+                      width: `${kpis.totalDeals > 0 ? (kpis.rejectedDeals / kpis.totalDeals) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -164,6 +234,7 @@ export default function CeoDashboardPage() {
                   <Users className="w-4 h-4 text-indigo-600" />
                   <h3 className="font-bold text-slate-900 text-sm">BDM Team Productivity & Output</h3>
                 </div>
+                <span className="text-xs text-slate-400 font-medium">Field Representatives</span>
               </div>
               <div className="overflow-x-auto flex-1">
                 <table className="w-full text-left border-collapse text-xs">
@@ -178,7 +249,7 @@ export default function CeoDashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
                     {kpis.bdmPerformance.map((bdm) => (
-                      <tr key={bdm.bdmId} className="hover:bg-slate-50/80">
+                      <tr key={bdm.bdmId} className="hover:bg-slate-50/80 transition-colors">
                         <td className="px-5 py-3.5">
                           <div className="font-bold text-slate-900">{bdm.bdmName}</div>
                           <span className="text-[10px] text-slate-400">{bdm.email}</span>
@@ -209,33 +280,31 @@ export default function CeoDashboardPage() {
                   <MapPin className="w-4 h-4 text-indigo-600" />
                   <h3 className="font-bold text-slate-900 text-sm">State & Geographic Institutional Reach</h3>
                 </div>
+                <span className="text-xs text-slate-400 font-medium">Pan-India Pipeline</span>
               </div>
-              <div className="overflow-x-auto flex-1">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 font-semibold uppercase border-b border-slate-200">
-                      <th className="px-5 py-3">State / Region</th>
-                      <th className="px-5 py-3 text-center">Colleges</th>
-                      <th className="px-5 py-3 text-center">Deals Closed</th>
-                      <th className="px-5 py-3 text-right">Penetration</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {kpis.stateDistribution.map((s) => (
-                      <tr key={s.state} className="hover:bg-slate-50/80">
-                        <td className="px-5 py-3.5 font-bold text-slate-900">{s.state}</td>
-                        <td className="px-5 py-3.5 text-center font-medium">{s.collegesCount}</td>
-                        <td className="px-5 py-3.5 text-center font-bold text-indigo-600">{s.dealsCount}</td>
-                        <td className="px-5 py-3.5 text-right font-medium text-slate-500">
-                          {kpis.totalColleges > 0
-                            ? Math.round((s.collegesCount / kpis.totalColleges) * 100)
-                            : 0}
-                          %
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="p-4 space-y-3 flex-1 overflow-y-auto">
+                {kpis.stateDistribution.map((s) => {
+                  const pct =
+                    kpis.totalColleges > 0
+                      ? Math.round((s.collegesCount / kpis.totalColleges) * 100)
+                      : 0;
+                  return (
+                    <div key={s.state} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-800">{s.state}</span>
+                        <span className="text-slate-500 font-medium">
+                          {s.collegesCount} colleges • <strong>{s.dealsCount} deals</strong>
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-indigo-600 h-full rounded-full transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -248,15 +317,27 @@ export default function CeoDashboardPage() {
                 <PieChart className="w-4 h-4 text-indigo-600" />
                 <h3 className="font-bold text-slate-900 text-sm">Service Category Distribution</h3>
               </div>
-              <div className="space-y-3">
-                {kpis.categoryDistribution.map((c) => (
-                  <div key={c.category} className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-slate-700">{c.category}</span>
-                    <span className="font-bold text-slate-900 px-2 py-0.5 bg-slate-100 rounded-md">
-                      {c.count} {c.count === 1 ? 'deal' : 'deals'}
-                    </span>
-                  </div>
-                ))}
+              <div className="space-y-3.5">
+                {kpis.categoryDistribution.map((c) => {
+                  const pct =
+                    kpis.totalDeals > 0 ? Math.round((c.count / kpis.totalDeals) * 100) : 0;
+                  return (
+                    <div key={c.category} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-slate-700">{c.category}</span>
+                        <span className="font-bold text-slate-900">
+                          {c.count} ({pct}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-purple-600 h-full rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -287,7 +368,7 @@ export default function CeoDashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
                     {recentDeals.map((d) => (
-                      <tr key={d.id} className="hover:bg-slate-50/80">
+                      <tr key={d.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="px-5 py-3 font-mono font-bold text-slate-900">{d.deal_code}</td>
                         <td className="px-5 py-3 font-semibold text-slate-900">{d.college_name}</td>
                         <td className="px-5 py-3">{d.bdm_name}</td>

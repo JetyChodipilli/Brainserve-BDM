@@ -111,7 +111,9 @@ export interface Deal {
   college_name?: string;
   college_city?: string;
   college_state?: string;
+  college_website?: string;
   contact_name?: string;
+  contact_designation?: string;
   contact_email?: string;
   contact_phone?: string;
   bdm_name?: string;

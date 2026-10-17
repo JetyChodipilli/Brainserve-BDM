@@ -1,11 +1,26 @@
 // src/components/DashboardLayout.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { User } from '@/server/domain/types';
+
+interface UserContextType {
+  user: User;
+  refreshUser: () => Promise<void>;
+}
+
+const UserContext = createContext<UserContextType | null>(null);
+
+export function useCurrentUser(): UserContextType {
+  const ctx = useContext(UserContext);
+  if (!ctx) {
+    throw new Error('useCurrentUser must be used within DashboardLayout');
+  }
+  return ctx;
+}
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,37 +32,37 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, allo
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (!res.ok) {
-          router.push('/login');
-          return;
-        }
-        const data = await res.json();
-        if (!data.authenticated) {
-          router.push('/login');
-          return;
-        }
-
-        if (allowedRoles && !allowedRoles.includes(data.user.role)) {
-          // Redirect to user's appropriate portal
-          if (data.user.role === 'CEO') router.push('/ceo/dashboard');
-          else if (data.user.role === 'HR') router.push('/hr/dashboard');
-          else router.push('/bdm/dashboard');
-          return;
-        }
-
-        setUser(data.user);
-      } catch (err) {
-        console.error('Auth verification failed:', err);
+  const fetchAuth = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) {
         router.push('/login');
-      } finally {
-        setLoading(false);
+        return;
       }
+      const data = await res.json();
+      if (!data.authenticated) {
+        router.push('/login');
+        return;
+      }
+
+      if (allowedRoles && !allowedRoles.includes(data.user.role)) {
+        if (data.user.role === 'CEO') router.push('/ceo/dashboard');
+        else if (data.user.role === 'HR') router.push('/hr/dashboard');
+        else router.push('/bdm/dashboard');
+        return;
+      }
+
+      setUser(data.user);
+    } catch (err) {
+      console.error('Auth verification failed:', err);
+      router.push('/login');
+    } finally {
+      setLoading(false);
     }
-    checkAuth();
+  };
+
+  useEffect(() => {
+    fetchAuth();
   }, [router, allowedRoles]);
 
   if (loading) {
@@ -64,14 +79,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, allo
   if (!user) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      <Navbar user={user} />
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar role={user.role} />
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          <div className="max-w-7xl mx-auto space-y-6">{children}</div>
-        </main>
+    <UserContext.Provider value={{ user, refreshUser: fetchAuth }}>
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+        <Navbar user={user} />
+        <div className="flex-1 flex overflow-hidden">
+          <Sidebar role={user.role} />
+          <main className="flex-1 overflow-y-auto p-6 md:p-8">
+            <div className="max-w-7xl mx-auto space-y-6">{children}</div>
+          </main>
+        </div>
       </div>
-    </div>
+    </UserContext.Provider>
   );
 };

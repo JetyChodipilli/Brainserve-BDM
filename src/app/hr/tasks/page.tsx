@@ -12,6 +12,7 @@ import {
   AlertCircle,
   FileText,
   User,
+  Filter,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -21,6 +22,7 @@ import { HRTask, Deal } from '@/server/domain/types';
 export default function HrTasksPage() {
   const [tasks, setTasks] = useState<HRTask[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [hrUsers, setHrUsers] = useState<{ id: string; full_name: string; email: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
 
@@ -29,6 +31,7 @@ export default function HrTasksPage() {
   const [taskDealId, setTaskDealId] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
+  const [taskAssignedTo, setTaskAssignedTo] = useState('');
   const [taskDueDate, setTaskDueDate] = useState('');
   const [taskNotes, setTaskNotes] = useState('');
 
@@ -38,9 +41,10 @@ export default function HrTasksPage() {
       const params = new URLSearchParams();
       if (statusFilter !== 'ALL') params.set('status', statusFilter);
 
-      const [taskRes, dealsRes] = await Promise.all([
+      const [taskRes, dealsRes, usersRes] = await Promise.all([
         fetch(`/api/hr-tasks?${params.toString()}`),
         fetch('/api/deals?status=ALL'),
+        fetch('/api/users?role=HR'),
       ]);
 
       if (taskRes.ok) {
@@ -50,6 +54,10 @@ export default function HrTasksPage() {
       if (dealsRes.ok) {
         const d = await dealsRes.json();
         setDeals(d.deals || []);
+      }
+      if (usersRes.ok) {
+        const d = await usersRes.json();
+        setHrUsers(d.users || []);
       }
     } catch (err) {
       console.error('Failed to load tasks:', err);
@@ -79,6 +87,7 @@ export default function HrTasksPage() {
           college_id: deal.college_id,
           title: taskTitle,
           description: taskDesc,
+          assigned_to: taskAssignedTo || undefined,
           due_date: taskDueDate || undefined,
           internal_notes: taskNotes || undefined,
         }),
@@ -94,6 +103,7 @@ export default function HrTasksPage() {
       setTaskDesc('');
       setTaskNotes('');
       setTaskDueDate('');
+      setTaskAssignedTo('');
       loadTasks();
     } catch (err: any) {
       alert(err.message);
@@ -120,7 +130,7 @@ export default function HrTasksPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Campus Onboarding & Operational Tasks</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Track MoU signing, curriculum alignment, trainer deployment, and institutional milestone delivery.
+            Track MoU signing, bilateral vetting, curriculum alignment, trainer deployment, and institutional milestones.
           </p>
         </div>
         <button
@@ -135,6 +145,7 @@ export default function HrTasksPage() {
       {/* Filter Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
+          <Filter className="w-3.5 h-3.5 text-slate-500" />
           <span className="text-xs font-semibold text-slate-600">Filter Status:</span>
           <select
             value={statusFilter}
@@ -196,7 +207,7 @@ export default function HrTasksPage() {
                       <span className="font-mono text-slate-500 block">{task.deal_code}</span>
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-700 font-medium">
-                      {task.assigned_name || 'Unassigned'}
+                      {task.assigned_name || 'HR Operations Team'}
                     </td>
                     <td className="px-6 py-4 text-xs">
                       <span className="font-semibold text-slate-800">{formatDateOnly(task.due_date)}</span>
@@ -241,7 +252,7 @@ export default function HrTasksPage() {
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-slate-900">Create Campus Onboarding Task</h3>
+            <h3 className="text-base font-bold text-slate-900">Create Campus Onboarding Task</h3>
             <p className="text-xs text-slate-500 mt-1">
               Assign an operational deliverable against an approved or submitted collegiate partnership.
             </p>
@@ -276,21 +287,38 @@ export default function HrTasksPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Due Date</label>
-                <input
-                  type="date"
-                  value={taskDueDate}
-                  onChange={(e) => setTaskDueDate(e.target.value)}
-                  className="w-full text-xs border border-slate-300 rounded-lg p-2.5 text-slate-900"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Assign To HR Specialist</label>
+                  <select
+                    value={taskAssignedTo}
+                    onChange={(e) => setTaskAssignedTo(e.target.value)}
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white text-slate-900 font-medium"
+                  >
+                    <option value="">-- General HR Queue --</option>
+                    {hrUsers.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.full_name} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    value={taskDueDate}
+                    onChange={(e) => setTaskDueDate(e.target.value)}
+                    className="w-full text-xs border border-slate-300 rounded-lg p-2.5 text-slate-900"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
                 <textarea
                   rows={2}
-                  placeholder="Specific action items..."
+                  placeholder="Specific action items and deliverables..."
                   value={taskDesc}
                   onChange={(e) => setTaskDesc(e.target.value)}
                   className="w-full text-xs border border-slate-300 rounded-lg p-2.5 text-slate-900"
@@ -301,7 +329,7 @@ export default function HrTasksPage() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">Internal Operational Notes</label>
                 <input
                   type="text"
-                  placeholder="Internal coordinator notes..."
+                  placeholder="Internal notes for operations..."
                   value={taskNotes}
                   onChange={(e) => setTaskNotes(e.target.value)}
                   className="w-full text-xs border border-slate-300 rounded-lg p-2.5 text-slate-900"
