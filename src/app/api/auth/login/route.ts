@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/server/db/pool';
 import { verifyPassword, createSession, makeSessionCookie } from '@/server/security/auth';
 import { checkRateLimit, resetRateLimit } from '@/server/security/rateLimiter';
-import { recordAuditLog } from '@/server/services/auditService';
+import speakeasy from 'speakeasy';
 import { User } from '@/server/domain/types';
 
 export async function POST(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, password } = body;
+    const { email, password, mfaToken } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
@@ -46,6 +46,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
 
+    // CEO MFA verification
+    if (user.role === 'CEO') {
+      if (!mfaToken) {
+        return NextResponse.json({ error: 'MFA token required for CEO login.' }, { status: 401 });
+      }
+      const verified = speakeasy.totp.verify({
+        secret: user.mfa_secret || '',
+        encoding: 'base32',
+        token: String(mfaToken),
+        window: 1,
+      });
+      if (!verified) {
+        return NextResponse.json({ error: 'Invalid MFA token.' }, { status: 401 });
+      }
+    }
     // Reset rate limiter on successful authentication
     resetRateLimit(rateLimitKey);
 

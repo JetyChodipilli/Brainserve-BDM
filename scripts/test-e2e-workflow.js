@@ -37,6 +37,22 @@ async function run() {
   console.log('REAL WORKFLOW E2E VALIDATION');
   console.log('==================================================');
 
+  // Ensure a CEO account exists before login (single‑CEO constraint)
+  console.log('\n--- Step 0: Ensure CEO Account Exists ---');
+  const initStatus = await request('/api/auth/register');
+  if (!initStatus.data?.hasCeo) {
+    const ensureCeoRes = await request('/api/auth/register', { method: 'POST' }, {
+      full_name: 'Enterprise CEO',
+      email: 'ceo@enterprise.edu',
+      role: 'CEO',
+      password: 'CeoPassword123!',
+      phone: '+91 90000 11122'
+    });
+    console.log('CEO ensure register status:', ensureCeoRes.statusCode, '| Message:', ensureCeoRes.data?.message || ensureCeoRes.data?.error);
+  } else {
+    console.log('CEO already exists, skipping registration');
+  }
+
   console.log('\n--- Step 1: Login as Executive CEO ---');
   const loginRes = await request('/api/auth/login', { method: 'POST' }, {
     email: 'ceo@enterprise.edu',
