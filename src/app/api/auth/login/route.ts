@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/server/db/pool';
 import { verifyPassword, createSession, makeSessionCookie } from '@/server/security/auth';
-import { checkRateLimit } from '@/server/security/rateLimiter';
+import { checkRateLimit, resetRateLimit } from '@/server/security/rateLimiter';
 import { recordAuditLog } from '@/server/services/auditService';
 import { User } from '@/server/domain/types';
 
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const rateLimitKey = `login_${ip}`;
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    const rateCheck = checkRateLimit(rateLimitKey, 20, 15 * 60 * 1000);
 
     if (!rateCheck.allowed) {
       return NextResponse.json(
@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
     if (!passwordMatch) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
+
+    // Reset rate limiter on successful authentication
+    resetRateLimit(rateLimitKey);
 
     // Create session
     const userAgent = req.headers.get('user-agent') || undefined;

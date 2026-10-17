@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   ClipboardList,
   Sparkles,
+  Users,
 } from 'lucide-react';
 import { UserRole } from '@/server/domain/types';
 
@@ -52,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         return [
           { href: '/ceo/dashboard', label: 'Executive Dashboard', icon: LayoutDashboard },
           { href: '/ceo/approvals', label: 'Approval Queue', icon: CheckSquare, badge: 'CEO' },
+          { href: '/ceo/users', label: 'Team & Accounts', icon: Users },
           { href: '/ceo/colleges', label: 'College Directory', icon: Building2 },
           { href: '/ceo/reports', label: 'Reports & Export', icon: BarChart3 },
           { href: '/ceo/audit-logs', label: 'Security & Audit Logs', icon: ShieldAlert },

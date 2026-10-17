@@ -1,9 +1,10 @@
 // src/app/login/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Lock, Mail, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Shield, Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +12,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasCeo, setHasCeo] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function checkSetup() {
+      try {
+        const res = await fetch('/api/setup/status');
+        if (res.ok) {
+          const data = await res.json();
+          setHasCeo(data.hasCeo);
+        }
+      } catch (err) {
+        // Fallback
+      }
+    }
+    checkSetup();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +43,10 @@ export default function LoginPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed.');
+        throw new Error(data.error || 'Authentication failed. Please verify credentials.');
       }
 
-      // Route to user's dedicated portal
+      // Route to user's dedicated portal based on their verified database role
       if (data.user.role === 'CEO') {
         router.push('/ceo/dashboard');
       } else if (data.user.role === 'HR') {
@@ -45,11 +62,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = (roleEmail: string, rolePass: string) => {
-    setEmail(roleEmail);
-    setPassword(rolePass);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
@@ -60,7 +72,7 @@ export default function LoginPage() {
           EduDeal Enterprise
         </h1>
         <p className="mt-2 text-sm text-slate-300">
-          College Business Deal Management & Executive Governance
+          College Business Deal Management & Executive Governance Platform
         </p>
       </div>
 
@@ -75,7 +87,7 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Work Email Address
               </label>
               <div className="mt-1 relative rounded-lg shadow-sm">
@@ -94,7 +106,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Password
               </label>
               <div className="mt-1 relative rounded-lg shadow-sm">
@@ -128,49 +140,31 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Login Credentials Bar */}
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              <span>One-Click Role Demonstration Accounts</span>
+          {/* Security & Organization Notice */}
+          <div className="mt-6 pt-5 border-t border-slate-100 space-y-3 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 font-medium">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Zero-Trust Server Authorization Active</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('ceo@enterprise.edu', 'CeoPassword123!')}
-                className="p-2 text-left rounded-lg border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors"
-              >
-                <div className="font-bold text-amber-900">👑 CEO Executive</div>
-                <div className="text-[11px] text-amber-700">Dr. Rajesh Nair</div>
-              </button>
 
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('hr@enterprise.edu', 'HrPassword123!')}
-                className="p-2 text-left rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors"
-              >
-                <div className="font-bold text-purple-900">👥 HR Operations</div>
-                <div className="text-[11px] text-purple-700">Ananya Iyer</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('bdm.vikram@enterprise.edu', 'BdmPassword123!')}
-                className="p-2 text-left rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors"
-              >
-                <div className="font-bold text-blue-900">💼 BDM Lead 1</div>
-                <div className="text-[11px] text-blue-700">Vikram Sharma</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('bdm.priya@enterprise.edu', 'BdmPassword123!')}
-                className="p-2 text-left rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 transition-colors"
-              >
-                <div className="font-bold text-teal-900">💼 BDM Lead 2</div>
-                <div className="text-[11px] text-teal-700">Priya Patel</div>
-              </button>
-            </div>
+            {!hasCeo ? (
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 text-left">
+                <div className="font-bold">Initial Setup Required:</div>
+                <p className="mt-0.5 text-amber-800">
+                  No Chief Executive Officer account exists yet.
+                </p>
+                <Link
+                  href="/setup"
+                  className="mt-2 inline-block font-bold text-indigo-700 hover:underline"
+                >
+                  Initialize Primary CEO Executive Account →
+                </Link>
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-400">
+                New employee accounts (HR & BDM) are provisioned directly by the Chief Executive Officer.
+              </p>
+            )}
           </div>
         </div>
       </div>
