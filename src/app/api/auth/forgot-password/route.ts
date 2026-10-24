@@ -1,17 +1,14 @@
 // src/app/api/auth/forgot-password/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/server/db/pool';
-import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
 /**
  * POST /api/auth/forgot-password
  * Body: { email: string }
  *
- * Generates a one‑time reset token, stores a hash of it in `password_resets`
- * with a 15‑minute expiry, and returns a generic success response. In a real
- * implementation the token would be emailed to the user – here we just log it
- * for development purposes.
+ * Generates a one-time reset token, stores it in `password_resets`
+ * with a 15-minute expiry, and returns a generic success response.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -20,36 +17,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
     }
 
-    // Look up the user – if not found we still return success to avoid enumeration.
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    // Look up the user – if not found return success to prevent email enumeration
     const userRes = await query<{ id: string }>(
       `SELECT id FROM users WHERE LOWER(email) = $1 AND is_active = TRUE`,
-      [String(email).trim().toLowerCase()]
+      [normalizedEmail]
     );
+
     if (userRes.rowCount === 0) {
-      // Pretend we sent an email.
-      console.info('Forgot‑password request for non‑existent email:', email);
+      console.info('Forgot-password request for non-existent email:', normalizedEmail);
       return NextResponse.json({ success: true }, { status: 200 });
     }
 
     const userId = userRes.rows[0].id;
     const token = randomBytes(32).toString('hex');
-    const tokenHash = await bcrypt.hash(token, 10);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Insert (or upsert) the password reset record.
+    // Invalidate existing unused tokens for this user
+    await query(`UPDATE password_resets SET used = TRUE WHERE user_id = $1 AND used = FALSE`, [userId]);
+
+    // Insert new reset token
     await query(
-      `INSERT INTO password_resets (user_id, token_hash, expires_at, used)
-       VALUES ($1, $2, $3, FALSE)
-       ON CONFLICT (user_id) DO UPDATE SET token_hash = $2, expires_at = $3, used = FALSE`,
-      [userId, tokenHash, expiresAt]
+      `INSERT INTO password_resets (user_id, email, token, expires_at, used)
+       VALUES ($1, $2, $3, $4, FALSE)`,
+      [userId, normalizedEmail, token, expiresAt]
     );
 
-    // Stub: log the token – replace with real email delivery.
-    console.info(`Password reset token for ${email}: ${token}`);
+    console.info(`Password reset token generated for ${normalizedEmail}: ${token}`);
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'If the email exists, a reset link has been dispatched.' }, { status: 200 });
   } catch (err) {
-    console.error('Forgot‑password error:', err);
+    console.error('Forgot-password error:', err);
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

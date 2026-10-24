@@ -5,6 +5,7 @@ import { createDeal, submitDeal, approveDeal, listDeals, getDealById } from '../
 import { listHRTasks } from '../../src/server/services/hrTaskService';
 import { getUserNotifications } from '../../src/server/services/notificationService';
 import { User } from '../../src/server/domain/types';
+import { getOrCreateTestUser } from '../helpers/mockUser';
 
 describe('End-to-End Deal Lifecycle & Multi-Role Visibility', () => {
   let bdmUser1: User;
@@ -14,21 +15,24 @@ describe('End-to-End Deal Lifecycle & Multi-Role Visibility', () => {
   let testCollegeId: string;
 
   beforeAll(async () => {
-    // Fetch seeded test users
-    const bdm1Res = await query<User>(`SELECT * FROM users WHERE email = 'bdm.vikram@enterprise.edu'`);
-    bdmUser1 = bdm1Res.rows[0];
+    // Ensure test users exist in DB
+    bdmUser1 = await getOrCreateTestUser('bdm.vikram@enterprise.edu', 'BDM', 'Vikram Sharma');
+    bdmUser2 = await getOrCreateTestUser('bdm.priya@enterprise.edu', 'BDM', 'Priya Patel');
+    ceoUser = await getOrCreateTestUser('ceo@enterprise.edu', 'CEO', 'Dr. Rajesh Nair');
+    hrUser = await getOrCreateTestUser('hr@enterprise.edu', 'HR', 'Ananya Iyer');
 
-    const bdm2Res = await query<User>(`SELECT * FROM users WHERE email = 'bdm.priya@enterprise.edu'`);
-    bdmUser2 = bdm2Res.rows[0];
-
-    const ceoRes = await query<User>(`SELECT * FROM users WHERE email = 'ceo@enterprise.edu'`);
-    ceoUser = ceoRes.rows[0];
-
-    const hrRes = await query<User>(`SELECT * FROM users WHERE email = 'hr@enterprise.edu'`);
-    hrUser = hrRes.rows[0];
-
-    const colRes = await query(`SELECT id FROM colleges LIMIT 1`);
-    testCollegeId = colRes.rows[0].id;
+    // Ensure at least one test college exists
+    const colRes = await query<{ id: string }>(`SELECT id FROM colleges LIMIT 1`);
+    if (colRes.rowCount && colRes.rowCount > 0) {
+      testCollegeId = colRes.rows[0].id;
+    } else {
+      const newCol = await query<{ id: string }>(
+        `INSERT INTO colleges (legal_name, normalized_name, college_code, institution_type, address)
+         VALUES ('RV College of Engineering', 'rv college of engineering', 'RVCE-BLR', 'Engineering', 'Mysore Road, Bengaluru')
+         RETURNING id`
+      );
+      testCollegeId = newCol.rows[0].id;
+    }
   });
 
   it('Step 1: BDM creates a deal in DRAFT status', async () => {

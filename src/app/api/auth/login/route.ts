@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/server/db/pool';
 import { verifyPassword, createSession, makeSessionCookie } from '@/server/security/auth';
 import { checkRateLimit, resetRateLimit } from '@/server/security/rateLimiter';
+import { recordAuditLog } from '@/server/services/auditService';
 import speakeasy from 'speakeasy';
 import { User } from '@/server/domain/types';
 

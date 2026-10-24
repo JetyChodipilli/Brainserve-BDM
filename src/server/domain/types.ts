@@ -8,6 +8,7 @@ export interface User {
   full_name: string;
   role: UserRole;
   phone?: string | null;
+  mfa_secret?: string | null;
   is_active: boolean;
   created_at: Date | string;
   updated_at: Date | string;
