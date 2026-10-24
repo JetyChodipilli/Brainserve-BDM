@@ -98,19 +98,20 @@ export default function HrDealsPage() {
                 <th className="px-6 py-3.5">BDM Owner</th>
                 <th className="px-6 py-3.5">Status</th>
                 <th className="px-6 py-3.5">Contract Value</th>
+                <th className="px-6 py-3.5">Business Ratio</th>
                 <th className="px-6 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
                     Loading deals...
                   </td>
                 </tr>
               ) : deals.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
                     No deals found matching the search.
                   </td>
                 </tr>
@@ -144,6 +145,9 @@ export default function HrDealsPage() {
                     </td>
                     <td className="px-6 py-4 font-bold text-slate-900">
                       {formatCurrencyINR(deal.agreement_value)}
+                    </td>
+                    <td className="px-6 py-4 text-xs">
+                      {deal.business_ratio || '—'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link

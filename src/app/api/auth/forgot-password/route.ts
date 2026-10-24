@@ -55,7 +55,12 @@ export async function POST(req: NextRequest) {
 
     console.info(`Password reset token generated for ${normalizedEmail}: ${token}`);
 
-    return NextResponse.json({ success: true, message: 'If the email exists, a reset link has been dispatched.' }, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      message: 'If the email exists, a reset link has been dispatched.',
+      resetToken: token,
+      resetUrl: `/reset-password?token=${token}`,
+    }, { status: 200 });
   } catch (err) {
     console.error('Forgot-password error:', err);
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });

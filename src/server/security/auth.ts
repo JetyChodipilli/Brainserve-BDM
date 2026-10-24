@@ -86,3 +86,13 @@ export function makeSessionCookie(token: string, expiresAt: Date): string {
 export function makeLogoutCookie(): string {
   return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 }
+// Added SYSTEM_USER for bootstrap operations
+export const SYSTEM_USER = {
+  id: 'system',
+  email: 'system@local',
+  full_name: 'System Bootstrap',
+  role: 'CEO' as const,
+  is_active: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};

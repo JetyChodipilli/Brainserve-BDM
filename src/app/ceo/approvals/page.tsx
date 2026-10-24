@@ -213,6 +213,11 @@ export default function CeoApprovalsPage() {
                           ? `${deal.college_percentage}% Commission`
                           : deal.ratio_terms_description || deal.ratio_type}
                       </span>
+                      {deal.business_ratio && (
+                        <div className="text-[11px] font-medium text-slate-500 mt-0.5">
+                          Offline Ratio: <span className="font-semibold text-slate-800">{deal.business_ratio}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 font-bold text-slate-900">
                       {formatCurrencyINR(deal.agreement_value)}

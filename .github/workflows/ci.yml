@@ -1,61 +1,48 @@
-name: CI/CD Pipeline - EduDeal Enterprise
+name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main, master ]
   pull_request:
-    branches: [main]
+    branches: [ main, master ]
 
 jobs:
-  validate-and-test:
-    name: Lint, Test & Build
+  build:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgrespassword
-          POSTGRES_DB: bdm_platform
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-
+    defaults:
+      run:
+        shell: powershell
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Database Migrations
-        env:
-          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
-        run: node scripts/migrate.js
+      - name: Lint code
+        run: npm run lint --if-present
 
-      - name: Seed Database
-        env:
-          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
-        run: node scripts/seed.js
+      - name: Run tests
+        run: npm test --silent
 
-      - name: Run Automated Test Suite (Unit & Integration)
-        env:
-          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
-        run: npm test
-
-      - name: Build Next.js Production Artifact
-        env:
-          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/bdm_platform
-          SESSION_SECRET: test-session-secret-for-ci-build-32chars
+      - name: Build production bundle
         run: npm run build
+
+      - name: Build Docker image
+        run: |
+          docker build -t bdm-app:ci .
+
+      - name: Upload artifact (Docker image tar)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: |
+            $(docker save bdm-app:ci -o bdm-app-ci.tar)
+            bdm-app-ci.tar

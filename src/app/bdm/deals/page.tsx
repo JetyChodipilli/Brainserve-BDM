@@ -127,19 +127,20 @@ export default function BdmDealsPage() {
                 <th className="px-6 py-3.5">Status</th>
                 <th className="px-6 py-3.5">Agreed Value</th>
                 <th className="px-6 py-3.5">Submitted Timestamp (IST)</th>
+                <th className="px-6 py-3.5">Business Ratio</th>
                 <th className="px-6 py-3.5 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
                     Loading your deals...
                   </td>
                 </tr>
               ) : deals.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
                     No deals match the selected criteria.
                   </td>
                 </tr>
@@ -169,6 +170,9 @@ export default function BdmDealsPage() {
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-600">
                       {formatDateTimeIST(deal.submitted_at || deal.created_at)}
+                    </td>
+                    <td className="px-6 py-4 text-xs">
+                      {deal.business_ratio || '—'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link

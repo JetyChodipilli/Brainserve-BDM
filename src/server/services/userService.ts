@@ -264,3 +264,19 @@ export async function listAllUsers(options?: { role?: string }): Promise<UserWit
 
   return res.rows;
 }
+
+/**
+ * Public registration endpoint used by self‑service sign‑up.
+ * It internally uses a system pseudo‑user with CEO privileges, but enforces that the role
+ * can only be HR or BDM. This function is deliberately thin – all validation lives in
+ * `createUser`.
+ */
+export async function registerUser(input: CreateUserInput, clientIp?: string): Promise<User> {
+  // Import SYSTEM_USER dynamically to avoid circular dependencies
+  const { SYSTEM_USER } = await import('../security/auth');
+  // Force role to be HR or BDM; any attempt to pass CEO will be rejected
+  if (input.role !== 'HR' && input.role !== 'BDM') {
+    throw new Error('Registration limited to HR or BDM roles.');
+  }
+  return createUser(input, SYSTEM_USER as unknown as User, clientIp);
+}

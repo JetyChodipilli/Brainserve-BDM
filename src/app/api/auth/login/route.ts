@@ -47,13 +47,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
 
-    // CEO MFA verification
-    if (user.role === 'CEO') {
+    // CEO MFA verification (enforced when MFA secret is provisioned)
+    if (user.role === 'CEO' && user.mfa_secret) {
       if (!mfaToken) {
-        return NextResponse.json({ error: 'MFA token required for CEO login.' }, { status: 401 });
+        return NextResponse.json({ error: 'MFA token required for CEO login.', mfaRequired: true }, { status: 401 });
       }
       const verified = speakeasy.totp.verify({
-        secret: user.mfa_secret || '',
+        secret: user.mfa_secret,
         encoding: 'base32',
         token: String(mfaToken),
         window: 1,

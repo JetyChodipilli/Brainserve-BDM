@@ -157,15 +157,17 @@ async function run() {
   console.log('Deal Submitted:', submitRes.statusCode, '| Status:', submitRes.data.deal?.status);
 
   console.log('\n--- 13. CEO Logs In and Approves Deal ---');
+  const effectiveCeoEmail = initialStatus.data?.hasCeo ? 'ceo@enterprise.edu' : ceoEmail;
+  const effectiveCeoPassword = initialStatus.data?.hasCeo ? 'CeoPassword123!' : 'CeoSecurePassword@2026';
   const ceoLogin = await request('/api/auth/login', { method: 'POST' }, {
-    email: ceoEmail,
-    password: 'CeoSecurePassword@2026'
+    email: effectiveCeoEmail,
+    password: effectiveCeoPassword
   });
   const ceoCookie = ceoLogin.headers['set-cookie'] ? ceoLogin.headers['set-cookie'][0].split(';')[0] : '';
   const approveRes = await request(`/api/deals/${dealId}/approve`, { method: 'POST' }, {
     remarks: 'Commercial percentages validated. Full executive signoff granted.'
   }, ceoCookie);
-  console.log('CEO Approved:', approveRes.statusCode, '| Status:', approveRes.data.deal?.status);
+  console.log('CEO Approved:', approveRes.statusCode, '| Status:', approveRes.data.status || approveRes.data.deal?.status);
 
   console.log('\n--- 14. HR Logs In and Creates Operational Task ---');
   const hrLogin = await request('/api/auth/login', { method: 'POST' }, {
