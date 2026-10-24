@@ -94,6 +94,7 @@ export async function PUT(
            contract_end_date = COALESCE($12, contract_end_date),
            terms_and_conditions = COALESCE($13, terms_and_conditions),
            additional_remarks = COALESCE($14, additional_remarks),
+           business_ratio = COALESCE($15, business_ratio),
            version_number = version_number + 1,
            updated_at = NOW()
        WHERE id = $1
@@ -113,6 +114,7 @@ export async function PUT(
         body.contract_end_date,
         body.terms_and_conditions,
         body.additional_remarks,
+        body.business_ratio !== undefined ? (body.business_ratio ? String(body.business_ratio).trim() : null) : null,
       ]
     );
 

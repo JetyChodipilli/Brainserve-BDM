@@ -89,6 +89,7 @@ export interface Deal {
   title: string;
   description: string;
   business_category: string;
+  business_ratio?: string | null;
   status: DealStatus;
   ratio_type: RatioType;
   company_percentage?: number | null;

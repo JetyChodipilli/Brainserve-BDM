@@ -31,6 +31,7 @@ export default function NewDealPage() {
   // Deal Form State
   const [title, setTitle] = useState('');
   const [businessCategory, setBusinessCategory] = useState('Campus Recruitment Training');
+  const [businessRatio, setBusinessRatio] = useState('');
   const [description, setDescription] = useState('');
   const [ratioType, setRatioType] = useState<RatioType>('REVENUE_SHARE_PERCENTAGE');
   const [companyPct, setCompanyPct] = useState<number | string>(70);
@@ -194,6 +195,7 @@ export default function NewDealPage() {
           title,
           description,
           business_category: businessCategory,
+          business_ratio: businessRatio.trim() || undefined,
           ratio_type: ratioType,
           company_percentage: ratioType === 'REVENUE_SHARE_PERCENTAGE' || ratioType === 'COMPANY_SHARE_PERCENTAGE' ? numCompany : undefined,
           college_percentage: ratioType === 'REVENUE_SHARE_PERCENTAGE' || ratioType === 'COLLEGE_COMMISSION_PERCENTAGE' ? numCollege : undefined,
@@ -435,6 +437,28 @@ export default function NewDealPage() {
               </div>
             </div>
 
+            {/* Offline Negotiated Business Ratio (Manual Entry by BDM) */}
+            <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-indigo-950 uppercase tracking-wider">
+                  Offline Negotiated Business Ratio (Manual Entry)
+                </label>
+                <span className="text-xs text-indigo-700 font-medium bg-indigo-100/70 px-2 py-0.5 rounded">
+                  Manual Entry
+                </span>
+              </div>
+              <p className="text-xs text-slate-600">
+                Enter the exact commercial ratio agreed upon during offline institutional meetings (e.g. <strong>70:30</strong>, <strong>65:35</strong>, or custom terms).
+              </p>
+              <input
+                type="text"
+                value={businessRatio}
+                onChange={(e) => setBusinessRatio(e.target.value)}
+                placeholder="e.g. 70:30 (Company:College) or 15% College Commission"
+                className="w-full text-sm border border-slate-300 rounded-lg p-2.5 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+              />
+            </div>
+
             {/* Dynamic Ratio Sub-form */}
             {ratioType === 'REVENUE_SHARE_PERCENTAGE' && (
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
@@ -457,11 +481,7 @@ export default function NewDealPage() {
                       min="0"
                       max="100"
                       value={companyPct}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        setCompanyPct(val);
-                        setCollegePct(Math.max(0, 100 - val));
-                      }}
+                      onChange={(e) => setCompanyPct(e.target.value)}
                       className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white text-slate-900"
                     />
                   </div>

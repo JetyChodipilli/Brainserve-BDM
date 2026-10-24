@@ -49,6 +49,7 @@ function DealDetailContent() {
   const [revisedTitle, setRevisedTitle] = useState('');
   const [revisedDesc, setRevisedDesc] = useState('');
   const [revisedTerms, setRevisedTerms] = useState('');
+  const [revisedBusinessRatio, setRevisedBusinessRatio] = useState('');
 
   // CEO Action Modals
   const [ceoModal, setCeoModal] = useState<'APPROVE' | 'REJECT' | 'CORRECTION' | null>(null);
@@ -77,6 +78,7 @@ function DealDetailContent() {
       setRevisedTitle(data.deal.title);
       setRevisedDesc(data.deal.description);
       setRevisedTerms(data.deal.terms_and_conditions || '');
+      setRevisedBusinessRatio(data.deal.business_ratio || '');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -124,6 +126,7 @@ function DealDetailContent() {
           title: revisedTitle,
           description: revisedDesc,
           terms_and_conditions: revisedTerms,
+          business_ratio: revisedBusinessRatio,
         }),
       });
 
@@ -401,6 +404,16 @@ function DealDetailContent() {
                     />
                   </div>
                   <div>
+                    <label className="block text-xs font-semibold mb-1">Offline Negotiated Ratio</label>
+                    <input
+                      type="text"
+                      value={revisedBusinessRatio}
+                      onChange={(e) => setRevisedBusinessRatio(e.target.value)}
+                      placeholder="e.g. 70:30 (Company:College)"
+                      className="w-full text-xs p-2.5 rounded-lg border border-orange-300 bg-white text-slate-900"
+                    />
+                  </div>
+                  <div>
                     <label className="block text-xs font-semibold mb-1">Payment Milestones</label>
                     <textarea
                       rows={2}
@@ -495,6 +508,14 @@ function DealDetailContent() {
                       : deal.ratio_terms_description || 'Agreed contractual terms'}
                   </span>
                 </div>
+                {deal.business_ratio && (
+                  <div>
+                    <span className="text-slate-500 block">Offline Negotiated Ratio</span>
+                    <span className="font-bold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 inline-block mt-0.5">
+                      {deal.business_ratio}
+                    </span>
+                  </div>
+                )}
                 <div>
                   <span className="text-slate-500 block">Total Agreement Value</span>
                   <span className="font-bold text-emerald-700 text-sm block mt-0.5">

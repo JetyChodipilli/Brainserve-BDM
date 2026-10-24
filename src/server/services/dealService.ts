@@ -12,6 +12,7 @@ export interface CreateDealInput {
   title: string;
   description: string;
   business_category: string;
+  business_ratio?: string | null;
   ratio_type: RatioType;
   company_percentage?: number | null;
   college_percentage?: number | null;
@@ -31,12 +32,9 @@ export interface UpdateDealInput extends Partial<CreateDealInput> {
 
 export async function generateDealCode(): Promise<string> {
   const year = new Date().getFullYear();
-  const res = await query(
-    `SELECT COUNT(*) as count FROM deals WHERE deal_code LIKE $1`,
-    [`DEAL-${year}-%`]
-  );
-  const nextNum = parseInt(res.rows[0].count, 10) + 1;
-  return `DEAL-${year}-${String(nextNum).padStart(4, '0')}`;
+  const timeSuffix = Date.now().toString().slice(-4);
+  const rand = Math.floor(100 + Math.random() * 900);
+  return `DEAL-${year}-${timeSuffix}${rand}`;
 }
 
 export async function createDeal(input: CreateDealInput, user: User, clientIp?: string): Promise<Deal> {
@@ -66,12 +64,12 @@ export async function createDeal(input: CreateDealInput, user: User, clientIp?: 
     const insertRes = await client.query<Deal>(
       `INSERT INTO deals (
         deal_code, college_id, primary_contact_id, bdm_id, title, description,
-        business_category, status, ratio_type, company_percentage, college_percentage,
+        business_category, business_ratio, status, ratio_type, company_percentage, college_percentage,
         agreement_value, currency, ratio_terms_description, contract_start_date,
         contract_end_date, terms_and_conditions, additional_remarks,
         submitted_at, version_number, created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
         ${initialStatus === 'SUBMITTED' ? 'NOW()' : 'NULL'},
         1, NOW(), NOW()
       ) RETURNING *`,
@@ -83,6 +81,7 @@ export async function createDeal(input: CreateDealInput, user: User, clientIp?: 
         input.title.trim(),
         input.description.trim(),
         input.business_category.trim(),
+        input.business_ratio?.trim() || null,
         initialStatus,
         ratioResult.normalized.ratio_type,
         ratioResult.normalized.company_percentage,
