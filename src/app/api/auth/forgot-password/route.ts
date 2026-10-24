@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/server/db/pool';
 import { randomBytes } from 'crypto';
+import { checkRateLimit } from '@/server/security/rateLimiter';
 
 /**
  * POST /api/auth/forgot-password
@@ -12,6 +13,14 @@ import { randomBytes } from 'crypto';
  */
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const rateCheck = checkRateLimit(`forgot_pw_${ip}`, 5, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: `Too many password reset requests. Please try again in ${rateCheck.resetInSeconds} seconds.` },
+        { status: 429 }
+      );
+    }
     const { email } = await req.json();
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 });

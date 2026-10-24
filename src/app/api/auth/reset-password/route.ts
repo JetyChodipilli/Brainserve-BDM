@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/server/db/pool';
 import { hashPassword } from '@/server/security/auth';
+import { checkRateLimit } from '@/server/security/rateLimiter';
 
 /**
  * POST /api/auth/reset-password
@@ -12,6 +13,14 @@ import { hashPassword } from '@/server/security/auth';
  */
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const rateCheck = checkRateLimit(`reset_pw_${ip}`, 10, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: `Too many password reset attempts. Please try again in ${rateCheck.resetInSeconds} seconds.` },
+        { status: 429 }
+      );
+    }
     const { token, newPassword } = await req.json();
     if (!token || !newPassword) {
       return NextResponse.json({ error: 'Token and new password are required.' }, { status: 400 });
