@@ -4,6 +4,7 @@
   "private": true,
   "description": "College Business Deal Management & Executive Dashboard Platform",
   "scripts": {
+    "start:prod": "node -r ts-node/register src/server/startup/index.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -36,6 +37,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.16",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

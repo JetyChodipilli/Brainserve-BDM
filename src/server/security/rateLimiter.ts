@@ -13,7 +13,7 @@ const memoryStore = new Map<string, RateLimitRecord>();
  * @param maxRequests maximum allowed requests in window
  * @param windowMs window size in milliseconds
  */
-export function checkRateLimit(key: string, maxRequests = 5, windowMs = 15 * 60 * 1000): {
+export function checkRateLimit(key: string, maxRequests = Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 10, windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000): {
   allowed: boolean;
   remaining: number;
   resetInSeconds: number;

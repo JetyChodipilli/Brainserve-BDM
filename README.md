@@ -71,6 +71,59 @@ The portal (`/login`) includes one-click demo login buttons for all roles:
 
 ## 🐳 Docker Deployment
 
+```bash
+docker-compose up --build -d
+```
+Access the application at `http://localhost:3000`.
+
+---
+
+## 🚀 Production Start
+
+### Required Environment Variables
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string, e.g., `postgres://user:pass@host:5432/db` |
+| `SESSION_SECRET` | Secret used for signing session cookies (high‑entropy value) |
+| `RATE_LIMIT_MAX_REQUESTS` *(optional)* | Maximum requests per window (default **10**) |
+| `RATE_LIMIT_WINDOW_MS` *(optional)* | Time window in milliseconds (default **60000**) |
+
+### Start the Server in Production
+```bash
+# Install production dependencies (if not already installed)
+npm ci --production
+
+# Run the bootstrap entry point that validates env vars and starts Next.js
+npm run start:prod
+```
+The script will abort immediately if any required variable is missing.
+
+### NGINX Reverse‑Proxy (recommended for production)
+The project includes an `nginx.conf` that proxies traffic from port **80** to the app container.
+```yaml
+services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+```
+You can place the above service definition in `docker-compose.yml` (already added).
+
+#### Optional TLS Setup (placeholder)
+To enable HTTPS, replace the `listen 80;` line in `nginx.conf` with:
+```nginx
+listen 443 ssl;
+# ssl_certificate /etc/nginx/certs/fullchain.pem;
+# ssl_certificate_key /etc/nginx/certs/privkey.pem;
+```
+Mount your TLS certificates into the container at `/etc/nginx/certs`.
+
+
 Run the complete application and PostgreSQL database with Docker Compose:
 
 ```bash
